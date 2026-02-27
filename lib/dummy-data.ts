@@ -237,3 +237,58 @@ export const recentActivity = [
   { id: '3', type: 'milestone', title: 'Reached 78% accuracy', time: '1 day ago', score: null },
   { id: '4', type: 'test_completed', title: 'Completed Mock Test #3', time: '2 days ago', score: 85 },
 ]
+
+// Daily Question Sets Generator
+const difficulties = ['easy', 'medium', 'hard'] as const
+const subjects = ['Data Structures', 'Algorithms', 'Database', 'Web Development'] as const
+
+export function generateDailyQuestionSets() {
+  const today = new Date()
+  const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const seed = parseInt(dateKey.replace(/-/g, ''))
+
+  const sets = []
+
+  // Shuffle questions array based on seed for consistent daily selection
+  const shuffledQuestions = [...questions].sort(() => {
+    const random = Math.sin(seed) * 10000
+    return random - Math.floor(random)
+  })
+
+  let questionIndex = 0
+
+  for (let setNum = 1; setNum <= 3; setNum++) {
+    const setId = `daily-${dateKey}-set-${setNum}`
+    const setQuestions = []
+
+    // Generate 12 questions per set (3 difficulties × 4 subjects = 12)
+    for (const difficulty of difficulties) {
+      for (const subject of subjects) {
+        // Get next question from shuffled list, cycling if needed
+        const baseQuestion = shuffledQuestions[questionIndex % shuffledQuestions.length]
+        questionIndex++
+
+        setQuestions.push({
+          ...baseQuestion,
+          id: `${setId}-q${setQuestions.length}`,
+          subject: subject,
+        })
+      }
+    }
+
+    sets.push({
+      id: setId,
+      setNumber: setNum,
+      date: today,
+      dateString: today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      questions: setQuestions,
+      totalQuestions: setQuestions.length,
+      completed: false,
+      score: null,
+    })
+  }
+
+  return sets
+}
+
+export type DailyQuestionSet = ReturnType<typeof generateDailyQuestionSets>[number]
