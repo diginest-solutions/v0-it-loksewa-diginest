@@ -26,7 +26,6 @@ export default function QuestionBankPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       const sets = generateDailyQuestionSets()
-      console.log('[v0] Daily sets generated:', sets)
       setDailySets(sets)
       setLoading(false)
     }, 800)
@@ -231,14 +230,18 @@ export default function QuestionBankPage() {
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: idx * 0.05 }}
-                              className="p-3 rounded-lg bg-slate-800/50 space-y-2"
+                              className="p-4 rounded-lg bg-slate-800/50 space-y-3 border border-slate-700/50"
                             >
+                              {/* Question Header */}
                               <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm text-white flex-1">
-                                  {idx + 1}. {question.text}
-                                </p>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-white">
+                                    {idx + 1}. {question.text}
+                                  </p>
+                                  <p className="text-xs text-slate-400 mt-1">{question.subject}</p>
+                                </div>
                                 <span
-                                  className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
+                                  className={`text-xs px-2 py-1 rounded whitespace-nowrap font-medium ${
                                     question.difficulty === 'easy'
                                       ? 'bg-green-500/20 text-green-400'
                                       : question.difficulty === 'medium'
@@ -249,9 +252,43 @@ export default function QuestionBankPage() {
                                   {question.difficulty}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400">
-                                {question.subject}
-                              </p>
+
+                              {/* MCQ Options */}
+                              {question.options && question.options.length > 0 && (
+                                <div className="space-y-2 pt-2">
+                                  <p className="text-xs text-slate-400 font-medium">Options:</p>
+                                  {question.options.map((option) => (
+                                    <motion.button
+                                      key={option.id}
+                                      whileHover={{ backgroundColor: 'rgb(30, 41, 59, 0.8)' }}
+                                      className={`w-full text-left p-2 rounded text-sm transition-colors ${
+                                        option.isCorrect
+                                          ? 'bg-green-500/20 border border-green-500/30 text-green-200'
+                                          : 'bg-slate-700/30 border border-slate-600/30 text-slate-300 hover:bg-slate-700/50'
+                                      }`}
+                                    >
+                                      <span className="font-medium">{option.id.toUpperCase()}.</span> {option.text}
+                                      {option.isCorrect && (
+                                        <span className="ml-2 text-xs text-green-400 font-semibold">✓ Correct</span>
+                                      )}
+                                    </motion.button>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Explanation */}
+                              {question.explanation && (
+                                <div className="pt-2 border-t border-slate-700/50">
+                                  <details className="cursor-pointer">
+                                    <summary className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
+                                      View Explanation
+                                    </summary>
+                                    <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                                      {question.explanation}
+                                    </p>
+                                  </details>
+                                </div>
+                              )}
                             </motion.div>
                           ))}
 
