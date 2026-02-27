@@ -55,30 +55,6 @@ export default function QuestionBankPage() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   }
 
-  const filteredQuestions = questions.filter((q) => {
-    const matchesSearch = q.text.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesDifficulty = selectedDifficulty === 'all' || q.difficulty === selectedDifficulty
-    const matchesSubject = selectedSubject === 'all' || q.subject === selectedSubject
-
-    return matchesSearch && matchesDifficulty && matchesSubject
-  })
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
