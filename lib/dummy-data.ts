@@ -244,29 +244,35 @@ const subjects = ['Data Structures', 'Algorithms', 'Database', 'Web Development'
 
 export function generateDailyQuestionSets() {
   const today = new Date()
-  const dateKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`
+  const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   const seed = parseInt(dateKey.replace(/-/g, ''))
 
   const sets = []
+
+  // Shuffle questions array based on seed for consistent daily selection
+  const shuffledQuestions = [...questions].sort(() => {
+    const random = Math.sin(seed) * 10000
+    return random - Math.floor(random)
+  })
+
+  let questionIndex = 0
 
   for (let setNum = 1; setNum <= 3; setNum++) {
     const setId = `daily-${dateKey}-set-${setNum}`
     const setQuestions = []
 
     // Generate 12 questions per set (3 difficulties × 4 subjects = 12)
-    let qIndex = 0
     for (const difficulty of difficulties) {
       for (const subject of subjects) {
-        const baseSeed = seed + setNum * 1000 + qIndex
-        const selectedQuestion = questions[(baseSeed + qIndex) % questions.length]
+        // Get next question from shuffled list, cycling if needed
+        const baseQuestion = shuffledQuestions[questionIndex % shuffledQuestions.length]
+        questionIndex++
 
         setQuestions.push({
-          ...selectedQuestion,
-          id: `${setId}-q${qIndex}`,
-          difficulty: difficulty as 'easy' | 'medium' | 'hard',
+          ...baseQuestion,
+          id: `${setId}-q${setQuestions.length}`,
           subject: subject,
         })
-        qIndex++
       }
     }
 

@@ -25,7 +25,9 @@ export default function QuestionBankPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDailySets(generateDailyQuestionSets())
+      const sets = generateDailyQuestionSets()
+      console.log('[v0] Daily sets generated:', sets)
+      setDailySets(sets)
       setLoading(false)
     }, 800)
     return () => clearTimeout(timer)
