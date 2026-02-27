@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Check, Zap } from 'lucide-react'
+import { Search, Filter, Check, Zap, X } from 'lucide-react'
 import { QuestionCard } from '@/components/question-card'
 import { questions, generateDailyQuestionSets, type DailyQuestionSet } from '@/lib/dummy-data'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,8 @@ export default function QuestionBankPage() {
   const [selectedSubject, setSelectedSubject] = useState<SubjectFilter>('all')
   const [dailySets, setDailySets] = useState<DailyQuestionSet[]>([])
   const [expandedSet, setExpandedSet] = useState<string | null>(null)
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({})
+  const [showExplanations, setShowExplanations] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -31,6 +33,20 @@ export default function QuestionBankPage() {
     }, 800)
     return () => clearTimeout(timer)
   }, [])
+
+  const handleSelectAnswer = (questionId: string, optionId: string) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [questionId]: optionId,
+    }))
+  }
+
+  const toggleExplanation = (questionId: string) => {
+    setShowExplanations((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }))
+  }
 
   const filteredQuestions = questions.filter((q) => {
     const matchesSearch = q.text.toLowerCase().includes(searchQuery.toLowerCase())
@@ -224,73 +240,143 @@ export default function QuestionBankPage() {
                           transition={{ duration: 0.3 }}
                           className="space-y-3 pt-4 border-t border-slate-800"
                         >
-                          {set.questions.map((question, idx) => (
-                            <motion.div
-                              key={question.id}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                              className="p-4 rounded-lg bg-slate-800/50 space-y-3 border border-slate-700/50"
-                            >
-                              {/* Question Header */}
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-white">
-                                    {idx + 1}. {question.text}
-                                  </p>
-                                  <p className="text-xs text-slate-400 mt-1">{question.subject}</p>
-                                </div>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded whitespace-nowrap font-medium ${
-                                    question.difficulty === 'easy'
-                                      ? 'bg-green-500/20 text-green-400'
-                                      : question.difficulty === 'medium'
-                                        ? 'bg-yellow-500/20 text-yellow-400'
-                                        : 'bg-red-500/20 text-red-400'
-                                  }`}
-                                >
-                                  {question.difficulty}
-                                </span>
-                              </div>
+                          {set.questions.map((question, idx) => {
+                            const selected = selectedAnswers[question.id]
+                            const isAnswered = selected !== undefined
+                            const isCorrect = isAnswered && question.options?.find((o) => o.id === selected)?.isCorrect
+                            const showExp = showExplanations[question.id]
 
-                              {/* MCQ Options */}
-                              {question.options && question.options.length > 0 && (
-                                <div className="space-y-2 pt-2">
-                                  <p className="text-xs text-slate-400 font-medium">Options:</p>
-                                  {question.options.map((option) => (
-                                    <motion.button
-                                      key={option.id}
-                                      whileHover={{ backgroundColor: 'rgb(30, 41, 59, 0.8)' }}
-                                      className={`w-full text-left p-2 rounded text-sm transition-colors ${
-                                        option.isCorrect
-                                          ? 'bg-green-500/20 border border-green-500/30 text-green-200'
-                                          : 'bg-slate-700/30 border border-slate-600/30 text-slate-300 hover:bg-slate-700/50'
-                                      }`}
-                                    >
-                                      <span className="font-medium">{option.id.toUpperCase()}.</span> {option.text}
-                                      {option.isCorrect && (
-                                        <span className="ml-2 text-xs text-green-400 font-semibold">✓ Correct</span>
-                                      )}
-                                    </motion.button>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Explanation */}
-                              {question.explanation && (
-                                <div className="pt-2 border-t border-slate-700/50">
-                                  <details className="cursor-pointer">
-                                    <summary className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
-                                      View Explanation
-                                    </summary>
-                                    <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                                      {question.explanation}
+                            return (
+                              <motion.div
+                                key={question.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="p-4 rounded-lg bg-slate-800/50 space-y-4 border border-slate-700/50"
+                              >
+                                {/* Question Header */}
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-white">
+                                      Q{idx + 1}. {question.text}
                                     </p>
-                                  </details>
+                                    <p className="text-xs text-slate-400 mt-1">{question.subject}</p>
+                                  </div>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded whitespace-nowrap font-medium ${
+                                      question.difficulty === 'easy'
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : question.difficulty === 'medium'
+                                          ? 'bg-yellow-500/20 text-yellow-400'
+                                          : 'bg-red-500/20 text-red-400'
+                                    }`}
+                                  >
+                                    {question.difficulty}
+                                  </span>
                                 </div>
-                              )}
-                            </motion.div>
-                          ))}
+
+                                {/* MCQ Options - Interactive */}
+                                {question.options && question.options.length > 0 && (
+                                  <div className="space-y-2 pt-2">
+                                    {question.options.map((option) => {
+                                      const isSelected = selected === option.id
+                                      const shouldHighlight = isAnswered && (isSelected || (option.isCorrect && showExp))
+
+                                      return (
+                                        <motion.button
+                                          key={option.id}
+                                          onClick={() => !isAnswered && handleSelectAnswer(question.id, option.id)}
+                                          whileHover={!isAnswered ? { scale: 1.01 } : {}}
+                                          disabled={isAnswered}
+                                          className={`w-full text-left p-3 rounded-lg text-sm font-medium transition-all border-2 ${
+                                            !isAnswered
+                                              ? 'cursor-pointer border-slate-600/30 bg-slate-700/30 text-slate-300 hover:bg-slate-700/50 hover:border-slate-500/50'
+                                              : shouldHighlight
+                                                ? isSelected && !option.isCorrect
+                                                  ? 'border-red-500/50 bg-red-500/20 text-red-200'
+                                                  : 'border-green-500/50 bg-green-500/20 text-green-200'
+                                                : 'border-slate-600/20 bg-slate-800/30 text-slate-400 opacity-50'
+                                          }`}
+                                        >
+                                          <span className="flex items-center justify-between gap-2">
+                                            <span>
+                                              <span className="font-semibold">{option.id.toUpperCase()}.</span> {option.text}
+                                            </span>
+                                            {isAnswered && shouldHighlight && (
+                                              <span className={`text-lg ${option.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                                                {option.isCorrect ? '✓' : '✗'}
+                                              </span>
+                                            )}
+                                          </span>
+                                        </motion.button>
+                                      )
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Answer Feedback */}
+                                {isAnswered && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                                      isCorrect
+                                        ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                                    }`}
+                                  >
+                                    {isCorrect ? (
+                                      <>
+                                        <Check size={18} />
+                                        Correct Answer!
+                                      </>
+                                    ) : (
+                                      <>
+                                        <X size={18} />
+                                        Incorrect. The correct answer is highlighted above.
+                                      </>
+                                    )}
+                                  </motion.div>
+                                )}
+
+                                {/* Explanation */}
+                                {isAnswered && question.explanation && (
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="pt-3 border-t border-slate-700/50 space-y-2"
+                                  >
+                                    <motion.button
+                                      onClick={() => toggleExplanation(question.id)}
+                                      className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2"
+                                    >
+                                      <motion.div
+                                        animate={{ rotate: showExp ? 180 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        </svg>
+                                      </motion.div>
+                                      View Explanation
+                                    </motion.button>
+
+                                    {showExp && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="text-xs text-slate-300 leading-relaxed bg-slate-900/50 p-3 rounded border border-indigo-500/20"
+                                      >
+                                        {question.explanation}
+                                      </motion.div>
+                                    )}
+                                  </motion.div>
+                                )}
+                              </motion.div>
+                            )
+                          })}
 
                           <motion.button
                             whileHover={{ scale: 1.05 }}
